@@ -1,0 +1,8 @@
+handle: {
+  let participants = event["participants"]
+
+  let allocations = zip(participants, shuffle(participants))
+    |> map(|[participant, recipient]| #{participant, recipient})
+
+  #{participants, allocations}
+}
