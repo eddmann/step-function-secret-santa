@@ -1,0 +1,181 @@
+service: step-function-secret-santa
+
+frameworkVersion: '3'
+
+custom:
+  allocationBucketName: 'secret-santa-allocations-${self:provider.stage}'
+
+provider:
+  name: aws
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+
+plugins:
+  - serverless-step-functions
+  - serverless-iam-roles-per-function
+
+package:
+  individually: true
+
+functions:
+  parse-participants:
+    handler: ParseParticipantsHandler::ParseParticipants.Handler::Handle
+    runtime: dotnet6
+    package:
+      artifact: src/parse-participants/bin/Release/net6.0/parse-participants.zip
+
+  validate-participants:
+    handler: src/validate-participants/handler.handle
+    runtime: nodejs16.x
+    package:
+      patterns:
+        - '!./**'
+        - ./src/validate-participants/handler.js
+
+  allocate:
+    handler: src/allocate/handler.handle
+    runtime: provided.al2
+    layers:
+      - 'arn:aws:lambda:us-east-1:428533468732:layer:santa-lang:3'
+    package:
+      patterns:
+        - '!./**'
+        - ./src/allocate/handler.santa
+
+  validate-allocations:
+    handler: com.secretsanta.Handler
+    runtime: java11
+    package:
+      artifact: src/validate-allocations/target/validate-allocations-dev.jar
+
+  store-allocations:
+    handler: src/store-allocations/bin/handler
+    runtime: go1.x
+    package:
+      patterns:
+        - '!./**'
+        - ./src/store-allocations/bin/handler
+    environment:
+      ALLOCATION_BUCKET: !Ref AllocationBucket
+    iamRoleStatements:
+      - Effect: 'Allow'
+        Action: 's3:PutObject'
+        Resource: 'arn:aws:s3:::${self:custom.allocationBucketName}/*'
+
+  notify-sms:
+    handler: handler.handle
+    runtime: ruby2.7
+    package:
+      artifact: src/notify-sms/notify-sms.zip
+    environment: ${file(./env.yml):notify-sms}
+
+  notify-email:
+    handler: handler.handle
+    runtime: python3.9
+    package:
+      artifact: src/notify-email/notify-email.zip
+    environment: ${file(./env.yml):notify-email}
+
+stepFunctions:
+  validate: true
+  stateMachines:
+    secret-santa:
+      name: 'secret-santa-${self:provider.stage}'
+      events:
+        - http:
+            path: /
+            method: POST
+            request:
+              template: lambda_proxy
+      definition:
+        StartAt: 'Parse Participants'
+        States:
+          'Parse Participants':
+            Type: Task
+            Resource:
+              Fn::GetAtt: [parse-participants, Arn]
+            Next: 'Validate Participants'
+          'Validate Participants':
+            Type: Task
+            Resource:
+              Fn::GetAtt: [validate-participants, Arn]
+            Next: 'Allocate'
+          'Allocate':
+            Type: Task
+            Resource:
+              Fn::GetAtt: [allocate, Arn]
+            Next: 'Validate Allocations'
+          'Validate Allocations':
+            Type: Task
+            Resource:
+              Fn::GetAtt: [validate-allocations, Arn]
+            Catch:
+              - ErrorEquals: ['States.ALL']
+                ResultPath: '$.error'
+                Next: 'Allocate'
+            Next: 'Store Allocations'
+          'Store Allocations':
+            Type: Task
+            Resource:
+              Fn::GetAtt: [store-allocations, Arn]
+            Next: 'Notify Participants'
+          'Notify Participants':
+            Type: Parallel
+            End: true
+            Branches:
+              - StartAt: 'Notify Email'
+                States:
+                  'Notify Email':
+                    Type: Map
+                    ItemsPath: '$.allocations'
+                    End: true
+                    Iterator:
+                      StartAt: 'Should Email?'
+                      States:
+                        'Should Email?':
+                          Type: Choice
+                          Choices:
+                            - Variable: '$.participant.email'
+                              StringMatches: ''
+                              Next: 'No Email'
+                          Default: 'Email'
+                        'Email':
+                          Type: Task
+                          End: true
+                          Resource:
+                            Fn::GetAtt: [notify-email, Arn]
+                        'No Email':
+                          Type: Pass
+                          End: true
+              - StartAt: 'Notify SMS'
+                States:
+                  'Notify SMS':
+                    Type: Map
+                    ItemsPath: '$.allocations'
+                    End: true
+                    Iterator:
+                      StartAt: 'Should SMS?'
+                      States:
+                        'Should SMS?':
+                          Type: Choice
+                          Choices:
+                            - Variable: '$.participant.number'
+                              StringMatches: ''
+                              Next: 'No SMS'
+                          Default: 'SMS'
+                        'SMS':
+                          Type: Task
+                          End: true
+                          Resource:
+                            Fn::GetAtt: [notify-sms, Arn]
+                        'No SMS':
+                          Type: Pass
+                          End: true
+
+resources:
+  Resources:
+    AllocationBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.allocationBucketName}
