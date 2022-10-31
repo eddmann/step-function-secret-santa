@@ -4,6 +4,13 @@ This year (2022) I decided to over-engineer the problem of allocating Secret San
 
 For the custom runtime `provided.al2` I explored the ability of using [my own language](https://github.com/eddmann/santa-lang-ts) which I have been developing throughout the year.
 
+## Getting Started
+
+```
+make package
+make deploy AWS_ACCESS_KEY_ID=ID AWS_SECRET_ACCESS_KEY=KEY
+```
+
 ## The Workflow
 
 <img src="./workflow.svg" width="300px" />
