@@ -17,3 +17,11 @@ For the custom runtime `provided.al2` I explored the ability of using [my own la
 | [Store Allocations](./src/store-allocations/)         | Stores the allocations within an plain-text file S3 object for review.                                            | Go `go1.x`                                                                                 |
 | [Notify Email](./src/notify-email/)                   | Sends an email (via Mailgun) to the given participant with their allocated recipient name in.                     | Python `python3.9`                                                                         |
 | [Notify SMS](./src/notify-sms/)                       | Sends an SMS (via Twilio) to the given participant with their allocated recipient name in.                        | Ruby `ruby2.7`                                                                             |
+
+## Other Years
+
+Interested in seeing how I over-engineered the problem of allocating Secret Santa's in other years?
+
+- 2020 - [Clojure Secret Santa](https://github.com/eddmann/clojure-secret-santa)
+- 2021 - [Pico Secret Santa](https://github.com/eddmann/pico-secret-santa)
+- 2022 - [Step Function Secret Santa](https://github.com/eddmann/step-function-secret-santa)
