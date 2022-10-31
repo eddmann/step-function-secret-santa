@@ -59,3 +59,21 @@ package/notify-email:
 			cd package && zip -r ../notify-email.zip . && \
 			cd .. && zip -g notify-email.zip handler.py \
 		"
+
+deploy: _require_AWS_ACCESS_KEY_ID _require_AWS_SECRET_ACCESS_KEY
+	docker run --rm \
+		-v $(PWD):/src \
+		-w /src \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		node:16-bullseye \
+		sh -c " \
+			mkdir -p bin && \
+			([ -f bin/serverless ] || wget -q -O bin/serverless https://github.com/serverless/serverless/releases/download/v3.23.0/serverless-linux-x64) && \
+			chmod +x bin/serverless && \
+			yarn && \
+			bin/serverless deploy --verbose \
+		"
+
+_require_%:
+	@_=$(or $($*),$(error "`$*` env var required"))
