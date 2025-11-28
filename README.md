@@ -29,6 +29,9 @@ make deploy AWS_ACCESS_KEY_ID=ID AWS_SECRET_ACCESS_KEY=KEY
 
 Interested in seeing how I over-engineered the problem of allocating Secret Santa's in other years?
 
-- 2020 - [Clojure Secret Santa](https://github.com/eddmann/clojure-secret-santa)
-- 2021 - [Pico Secret Santa](https://github.com/eddmann/pico-secret-santa)
-- 2022 - [Step Function Secret Santa](https://github.com/eddmann/step-function-secret-santa)
+- [2020 - Clojure Secret Santa](https://github.com/eddmann/clojure-secret-santa)
+- [2021 - Pico Secret Santa](https://github.com/eddmann/pico-secret-santa)
+- **2022 - Step Function Secret Santa** ⭐
+- [2023 - Secret Santa PWA](https://github.com/eddmann/secret-santa-pwa)
+- [2024 - Secret Santa Draw](https://github.com/eddmann/secret-santa-draw)
+- [2025 - Secret Santa Draw Arcade](https://github.com/eddmann/secret-santa-draw-arcade)
