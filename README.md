@@ -34,4 +34,4 @@ Interested in seeing how I over-engineered the problem of allocating Secret Sant
 - **2022 - Step Function Secret Santa** ⭐
 - [2023 - Secret Santa PWA](https://github.com/eddmann/secret-santa-pwa)
 - [2024 - Secret Santa Draw](https://github.com/eddmann/secret-santa-draw)
-- [2025 - Secret Santa Draw Arcade](https://github.com/eddmann/secret-santa-draw-arcade)
+- 2025 - [Secret Santa Draw Arcade](https://github.com/eddmann/secret-santa-draw-arcade) | [Secret Santa Draw GBC](https://github.com/eddmann/secret-santa-draw-gbc)
